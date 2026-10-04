@@ -15,6 +15,8 @@ import { LongDatePipe, NumPipe, SumPipe } from '../shared/pipes';
         <h1 class="h1">Bonuslar</h1>
       </header>
 
+      <div class="two-col">
+      <div class="two-col__main">
       <section class="loyalty-card" aria-label="Ball hisobi">
         <span class="pill pill--light">{{ loyalty.progress().tier.name }}</span>
         <p class="loyalty-card__balance"><span>{{ loyalty.balance() | num }}</span> ball</p>
@@ -65,6 +67,8 @@ import { LongDatePipe, NumPipe, SumPipe } from '../shared/pipes';
         </ul>
       </section>
 
+      </div>
+      <div class="two-col__side">
       <section class="section" aria-labelledby="hist-h">
         <h2 class="section__title" id="hist-h">Ballar tarixi</h2>
         @if (loyalty.account().history.length) {
@@ -86,6 +90,8 @@ import { LongDatePipe, NumPipe, SumPipe } from '../shared/pipes';
           <p class="muted">Hali ball harakati yo‘q</p>
         }
       </section>
+      </div>
+      </div>
     </main>
   `,
 })

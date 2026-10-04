@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CITIES } from '../core/data/mock-data';
 import { City, Hotel } from '../core/models';
@@ -6,6 +7,7 @@ import { AuthStore } from '../core/state/auth.store';
 import { BookingStore } from '../core/state/booking.store';
 import { HotelStore, cheapestRoom, guestsOf } from '../core/state/hotel.store';
 import { LoyaltyStore } from '../core/state/loyalty.store';
+import { addDays, todayIso } from '../core/util/format';
 import { Icon } from '../shared/icon';
 import { HotelCard } from '../shared/hotel-card';
 import { NumPipe, RangePipe } from '../shared/pipes';
@@ -16,16 +18,16 @@ type Sort = 'location' | 'price' | 'rating' | 'reviews';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, Icon, HotelCard, NumPipe, RangePipe, SearchSheet, NotificationsSheet],
+  imports: [FormsModule, RouterLink, Icon, HotelCard, NumPipe, RangePipe, SearchSheet, NotificationsSheet],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <main class="page page--tabs">
-      <header class="greeting">
+    <main class="page page--tabs home">
+      <header class="greeting home__greet">
         <div>
           <h1 class="h1">Salom, {{ auth.firstName() }}</h1>
           <p class="muted">Keyingi safaringiz uchun mehmonxona toping</p>
         </div>
-        <button type="button" class="icon-btn icon-btn--lg" (click)="notifOpen.set(true)"
+        <button type="button" class="icon-btn icon-btn--lg only-mobile" (click)="notifOpen.set(true)"
           [attr.aria-label]="'Bildirishnomalar' + (badge() ? ': ' + badge() + ' ta yangi' : '')">
           <app-icon name="bell" [size]="22" />
           @if (badge()) {
@@ -34,19 +36,45 @@ type Sort = 'location' | 'price' | 'rating' | 'reviews';
         </button>
       </header>
 
-      <div class="searchbar">
-        <button type="button" class="searchbar__main" (click)="searchOpen.set(true)">
-          <app-icon name="search" />
-          <span class="searchbar__text" [class.muted-2]="!hotels.criteria().query">
-            {{ hotels.criteria().query || 'O‘zbekiston' }}
-          </span>
-        </button>
-        <button type="button" class="icon-btn icon-btn--plain" aria-label="Filtrlar" (click)="searchOpen.set(true)">
-          <app-icon name="sliders" />
-        </button>
+      <div class="home__search">
+        <!-- Phone: one pill that opens the search sheet -->
+        <div class="searchbar only-mobile">
+          <button type="button" class="searchbar__main" (click)="searchOpen.set(true)">
+            <app-icon name="search" />
+            <span class="searchbar__text" [class.muted-2]="!c().query">{{ c().query || 'O‘zbekiston' }}</span>
+          </button>
+          <button type="button" class="icon-btn icon-btn--plain" aria-label="Filtrlar" (click)="searchOpen.set(true)">
+            <app-icon name="sliders" />
+          </button>
+        </div>
+
+        <!-- Desktop: inline segmented search -->
+        <form class="websearch only-desktop" role="search" (ngSubmit)="searchNow()">
+          <label class="websearch__seg websearch__seg--grow">
+            <span class="websearch__label">Joylashuv</span>
+            <input name="q" placeholder="Shahar yoki mehmonxona" autocomplete="off"
+              [ngModel]="c().query" (ngModelChange)="hotels.patch({ query: $event })" />
+          </label>
+          <label class="websearch__seg">
+            <span class="websearch__label">Kelish</span>
+            <input type="date" name="in" [min]="today" [ngModel]="c().checkIn" (ngModelChange)="setCheckIn($event)" />
+          </label>
+          <label class="websearch__seg">
+            <span class="websearch__label">Ketish</span>
+            <input type="date" name="out" [min]="minOut()" [ngModel]="c().checkOut"
+              (ngModelChange)="$event && hotels.patch({ checkOut: $event })" />
+          </label>
+          <button type="button" class="websearch__seg websearch__seg--btn" (click)="searchOpen.set(true)">
+            <span class="websearch__label">Mehmonlar va filtrlar</span>
+            <span>{{ guests() }} mehmon</span>
+          </button>
+          <button type="submit" class="btn btn--primary websearch__go">
+            <app-icon name="search" [size]="18" /> Qidirish
+          </button>
+        </form>
       </div>
 
-      <div class="chips-row" role="radiogroup" aria-label="Saralash">
+      <div class="chips-row home__chips" role="radiogroup" aria-label="Saralash">
         @for (s of sorts; track s.id) {
           <button type="button" role="radio" class="chip" [class.is-active]="sort() === s.id"
             [attr.aria-checked]="sort() === s.id" (click)="sort.set(s.id)">
@@ -55,7 +83,7 @@ type Sort = 'location' | 'price' | 'rating' | 'reviews';
         }
       </div>
 
-      <a class="loyalty-strip" routerLink="/bonuses" [attr.aria-label]="'Bonuslar: ' + loyalty.balance() + ' ball'">
+      <a class="loyalty-strip home__loyalty" routerLink="/bonuses" [attr.aria-label]="'Bonuslar: ' + loyalty.balance() + ' ball'">
         <div class="loyalty-strip__top">
           <span class="loyalty-strip__points"><strong>{{ loyalty.balance() | num }}</strong> ball</span>
           <span class="pill pill--dark">{{ loyalty.progress().tier.name }}</span>
@@ -75,9 +103,9 @@ type Sort = 'location' | 'price' | 'rating' | 'reviews';
         </p>
       </a>
 
-      <section class="section" aria-labelledby="recent-h">
+      <section class="section home__recent" aria-labelledby="recent-h">
         <h2 class="section__title" id="recent-h">Yaqinda ko‘rilgan</h2>
-        <ul class="h-scroll">
+        <ul class="h-scroll h-scroll--grid-4">
           @for (city of cities; track city.id) {
             <li>
               <button type="button" class="city-card" (click)="openCity(city)">
@@ -85,7 +113,7 @@ type Sort = 'location' | 'price' | 'rating' | 'reviews';
                 <span class="photo-tag">Borishni xohlayman</span>
                 <span class="city-card__text">
                   <span class="city-card__name">{{ city.name }}</span>
-                  <span class="city-card__dates">{{ hotels.criteria().checkIn | range: hotels.criteria().checkOut }}</span>
+                  <span class="city-card__dates">{{ c().checkIn | range: c().checkOut }}</span>
                 </span>
               </button>
             </li>
@@ -93,9 +121,9 @@ type Sort = 'location' | 'price' | 'rating' | 'reviews';
         </ul>
       </section>
 
-      <section class="section" aria-labelledby="popular-h">
+      <section class="section home__popular" aria-labelledby="popular-h">
         <h2 class="section__title" id="popular-h">Mashhur mehmonxonalar</h2>
-        <ul class="h-scroll">
+        <ul class="h-scroll h-scroll--grid">
           @for (h of popular(); track h.id) {
             <li><app-hotel-card [hotel]="h" [guests]="guests()" /></li>
           }
@@ -114,6 +142,9 @@ export class Home {
   private bookings = inject(BookingStore);
   private router = inject(Router);
 
+  protected c = this.hotels.criteria;
+  protected readonly today = todayIso();
+  protected minOut = computed(() => addDays(this.c().checkIn, 1));
   protected searchOpen = signal(false);
   protected notifOpen = signal(false);
   protected sort = signal<Sort>('location');
@@ -124,7 +155,7 @@ export class Home {
     { id: 'reviews', label: 'Sharhlar' },
   ];
   protected readonly cities = CITIES;
-  protected guests = computed(() => guestsOf(this.hotels.criteria()));
+  protected guests = computed(() => guestsOf(this.c()));
   protected badge = computed(() => this.bookings.upcoming().length);
 
   protected popular = computed(() => {
@@ -139,8 +170,19 @@ export class Home {
     return list.sort(by[this.sort()]);
   });
 
+  setCheckIn(v: string) {
+    if (!v) return;
+    const out = this.c().checkOut > v ? this.c().checkOut : addDays(v, 1);
+    this.hotels.patch({ checkIn: v, checkOut: out });
+  }
+
+  searchNow() {
+    this.hotels.search(this.c());
+    this.router.navigateByUrl('/results');
+  }
+
   openCity(city: City) {
-    this.hotels.search({ ...this.hotels.criteria(), query: city.name });
+    this.hotels.search({ ...this.c(), query: city.name });
     this.router.navigateByUrl('/results');
   }
 }

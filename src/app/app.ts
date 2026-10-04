@@ -3,6 +3,8 @@ import { RouterOutlet } from '@angular/router';
 import { ThemeStore } from './core/state/theme.store';
 import { ToastStore } from './core/state/toast.store';
 
+const BLANK = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet],
@@ -24,11 +26,14 @@ export class App {
   private theme = inject(ThemeStore);
 
   constructor() {
-    // Hide the browser's broken-image glyph; the soft placeholder behind stays.
+    // Swap failed images for a blank pixel so the soft placeholder shows, not the broken-image glyph.
     document.addEventListener(
       'error',
       (e) => {
-        if (e.target instanceof HTMLImageElement) e.target.classList.add('img-failed');
+        const img = e.target;
+        if (!(img instanceof HTMLImageElement) || img.classList.contains('img-failed')) return;
+        img.classList.add('img-failed');
+        img.src = BLANK;
       },
       true,
     );

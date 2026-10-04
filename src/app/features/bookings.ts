@@ -17,7 +17,7 @@ import { NumPipe, RangePipe, SumPipe } from '../shared/pipes';
       </header>
 
       @if (store.bookings().length) {
-        <ul class="v-list">
+        <ul class="v-list v-list--grid">
           @for (b of store.bookings(); track b.id) {
             @let h = hotel(b);
             <li class="booking">

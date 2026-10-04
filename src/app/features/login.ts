@@ -82,6 +82,11 @@ type Step = 'phone' | 'code' | 'name';
     .lead { margin: -6px 0 10px; }
     .input--code { text-align: center; letter-spacing: 0.5em; font-size: 22px; }
     .error:empty { display: none; }
+    @media (min-width: 960px) {
+      .login { min-height: auto; max-width: 460px; margin: 10vh auto 0; padding: 28px 32px 36px;
+        background: var(--surface); border-radius: var(--r-sheet); }
+      .login .icon-btn { background: var(--soft); }
+    }
   `,
 })
 export class Login {

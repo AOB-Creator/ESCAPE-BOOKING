@@ -15,7 +15,7 @@ import { Icon } from '../shared/icon';
         <h1 class="h1">Sevimlilar</h1>
       </header>
       @if (list().length) {
-        <ul class="v-list">
+        <ul class="v-list v-list--grid">
           @for (h of list(); track h.id) {
             <li><app-hotel-card [hotel]="h" [guests]="guests()" [wide]="true" /></li>
           }

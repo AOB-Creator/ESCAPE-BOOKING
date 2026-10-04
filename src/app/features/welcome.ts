@@ -20,27 +20,39 @@ import { AuthStore } from '../core/state/auth.store';
         <img class="orbit__center" [src]="center" alt="" />
       </div>
 
+      <div class="welcome__side">
       <div class="welcome__copy">
         <p class="muted">Toshkentdan Chimyongacha</p>
         <h1 class="display">Dam olish uchun joy — bir necha bosishda</h1>
       </div>
 
       <button type="button" class="btn btn--primary btn--block" (click)="start()">Boshlash</button>
+      </div>
     </main>
   `,
   styles: `
-    .welcome { min-height: 100dvh; display: flex; flex-direction: column; align-items: center;
+    .welcome { --orbit: min(330px, 84vw); min-height: 100dvh; display: flex; flex-direction: column; align-items: center;
       padding: calc(28px + env(safe-area-inset-top)) 20px calc(28px + env(safe-area-inset-bottom)); text-align: center; }
-    .orbit { position: relative; width: min(330px, 84vw); aspect-ratio: 1; margin: 28px auto 8px; flex-shrink: 0; }
+    .orbit { position: relative; width: var(--orbit); aspect-ratio: 1; margin: 28px auto 8px; flex-shrink: 0; }
     .orbit__ring { position: absolute; inset: 22%; border-radius: 50%; background: var(--surface); }
     .orbit__tile { --size: 15%; position: absolute; left: 50%; top: 50%; width: var(--size); aspect-ratio: 1;
       object-fit: cover; border-radius: 14px; background: var(--soft); margin: calc(var(--size) / -2);
-      transform: rotate(var(--a)) translate(calc(min(330px, 84vw) * 0.42)) rotate(calc(var(--a) * -1)) rotate(var(--r)); }
+      transform: rotate(var(--a)) translate(calc(var(--orbit) * 0.42)) rotate(calc(var(--a) * -1)) rotate(var(--r)); }
     .orbit__center { position: absolute; left: 50%; top: 50%; width: 32%; aspect-ratio: 1; object-fit: cover;
       border-radius: 22px; transform: translate(-50%, -50%); background: var(--soft); }
-    .welcome__copy { margin: auto 0 28px; }
+    .welcome__side { margin-top: auto; width: 100%; }
+    .welcome__copy { margin: 0 0 28px; }
     .welcome__copy .muted { margin: 0 0 10px; font-size: 15px; }
     .display { font-size: clamp(32px, 9.5vw, 40px); line-height: 1.08; letter-spacing: -0.035em; font-weight: 500; margin: 0; }
+    @media (min-width: 960px) {
+      .welcome { --orbit: min(500px, 40vw); display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto 1fr;
+        align-items: center; column-gap: 64px; max-width: 1200px; margin: 0 auto; padding: 32px 48px; text-align: left; }
+      .logo { grid-column: 1 / -1; justify-self: start; }
+      .orbit { margin: 0 auto; }
+      .welcome__side { margin: 0; max-width: 460px; }
+      .display { font-size: 56px; }
+      .welcome__side .btn { width: auto; padding: 0 40px; }
+    }
   `,
 })
 export class Welcome {

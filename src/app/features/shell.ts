@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Icon, IconName } from '../shared/icon';
+import { SiteHeader } from '../shared/site-header';
 
 interface NavItem {
   path: string;
@@ -10,9 +11,10 @@ interface NavItem {
 
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icon],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icon, SiteHeader],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    <app-site-header />
     <router-outlet />
     <nav class="dock" aria-label="Asosiy menyu">
       <ul class="dock__bar">

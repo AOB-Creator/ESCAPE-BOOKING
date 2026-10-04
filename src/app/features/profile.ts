@@ -15,7 +15,7 @@ import { NumPipe } from '../shared/pipes';
   imports: [FormsModule, RouterLink, BottomSheet, Icon, NumPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <main class="page page--tabs">
+    <main class="page page--tabs page--narrow">
       <header class="page-head">
         <h1 class="h1">Profil</h1>
       </header>

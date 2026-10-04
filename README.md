@@ -1,7 +1,13 @@
 # Escape — mehmonxona bron qilish va bonus ilovasi (Angular)
 
 Mobil ilova uslubidagi veb-sayt: telefon raqam orqali kirish, mehmonxona qidirish, xona tanlash, bron qilish va ball yig‘ish.
-Mobil-birinchi, kontent kengligi 460px; desktopda markazda turadi. Interfeys tili — o‘zbek (lotin), valyuta — so‘m.
+Interfeys tili — o‘zbek (lotin), valyuta — so‘m.
+
+**Ikki layout, bitta dizayn uslubi** (ranglar, pill tugmalar, radiuslar, Onest shrifti — `src/styles.scss` dagi tokenlar):
+
+- **Telefon (< 960px):** mobil ilova ko‘rinishi — 460px ustun, pastki suzuvchi menyu, bottom sheetlar.
+- **Desktop (≥ 960px):** veb-sayt ko‘rinishi — yuqori header-navigatsiya, segmentli qidiruv paneli, kartalar gridi,
+  natijalarda chap filtr paneli, mehmonxona sahifasida galereya va yopishqoq bron kartasi, sheetlar o‘rniga markazdagi modal oynalar.
 
 ## Ishga tushirish
 
