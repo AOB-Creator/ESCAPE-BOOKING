@@ -75,3 +75,11 @@ export function formatPhone(phone: string): string {
 export function uid(prefix = ''): string {
   return prefix + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 }
+
+const WEEKDAYS_SHORT = ['yak', 'dush', 'sesh', 'chor', 'pay', 'jum', 'shan'];
+
+/** "17 okt, shan" */
+export function formatDayDate(iso: string): string {
+  const d = parseIso(iso);
+  return `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}, ${WEEKDAYS_SHORT[d.getDay()]}`;
+}

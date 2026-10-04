@@ -1605,7 +1605,7 @@ $desktop: 960px;
   }
   .home__chips {
     grid-area: chips;
-    margin: 18px 0 0;
+    margin: 20px 0 0;
     padding: 0;
     overflow: visible;
   }
@@ -1616,65 +1616,47 @@ $desktop: 960px;
     grid-area: popular;
   }
 
-  .websearch {
+  /* Sort + type toolbar */
+  .toolbar {
     display: flex;
     align-items: center;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--r-pill);
-    padding: 8px;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
   }
-  .websearch__seg {
-    position: relative;
-    flex: 1;
+  .toolbar__group {
     display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 2px;
-    min-width: 0;
-    height: 62px;
-    padding: 0 24px;
-    border: 0;
-    border-radius: var(--r-pill);
-    background: none;
-    text-align: left;
+    align-items: center;
+    gap: 12px;
   }
-  .websearch__seg--grow {
-    flex: 1.5;
-  }
-  .websearch__seg + .websearch__seg::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 16px;
-    bottom: 16px;
-    width: 1px;
-    background: var(--border);
-  }
-  .websearch__seg:hover,
-  .websearch__seg:focus-within {
-    background: var(--soft);
-  }
-  .websearch__seg:focus-within {
-    outline: 2px solid var(--focus);
-    outline-offset: -2px;
-  }
-  .websearch__seg input {
-    width: 100%;
-    min-width: 0;
-    border: 0;
-    outline: 0;
-    padding: 0;
-    background: none;
-    font-size: 15px;
-  }
-  .websearch__seg input::placeholder {
+  .toolbar__label {
+    font-size: 13px;
     color: var(--muted);
   }
-  .websearch__go {
-    height: 58px;
-    margin-left: 8px;
-    padding: 0 30px;
+  .segmented {
+    display: inline-flex;
+    gap: 2px;
+    padding: 4px;
+    border-radius: var(--r-pill);
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+  .segmented__item {
+    height: 36px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: var(--r-pill);
+    background: none;
+    font-size: 14.5px;
+    color: var(--muted);
+    transition: background 0.15s, color 0.15s;
+  }
+  .segmented__item:hover {
+    color: var(--text);
+  }
+  .segmented__item.is-active {
+    background: var(--ink);
+    color: var(--on-ink);
   }
 
   /* Card grids instead of horizontal scrollers */

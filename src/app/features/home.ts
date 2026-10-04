@@ -1,24 +1,23 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { CITIES } from '../core/data/mock-data';
-import { City, Hotel } from '../core/models';
+import { CITIES, PROPERTY_TYPES } from '../core/data/mock-data';
+import { City, Hotel, PropertyType } from '../core/models';
 import { AuthStore } from '../core/state/auth.store';
 import { BookingStore } from '../core/state/booking.store';
 import { HotelStore, cheapestRoom, guestsOf } from '../core/state/hotel.store';
 import { LoyaltyStore } from '../core/state/loyalty.store';
-import { addDays, todayIso } from '../core/util/format';
 import { Icon } from '../shared/icon';
 import { HotelCard } from '../shared/hotel-card';
 import { NumPipe, RangePipe } from '../shared/pipes';
 import { NotificationsSheet } from './notifications-sheet';
 import { SearchSheet } from './search-sheet';
+import { WebSearch } from './web-search';
 
 type Sort = 'location' | 'price' | 'rating' | 'reviews';
 
 @Component({
   selector: 'app-home',
-  imports: [FormsModule, RouterLink, Icon, HotelCard, NumPipe, RangePipe, SearchSheet, NotificationsSheet],
+  imports: [RouterLink, Icon, HotelCard, NumPipe, RangePipe, SearchSheet, NotificationsSheet, WebSearch],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <main class="page page--tabs home">
@@ -49,38 +48,37 @@ type Sort = 'location' | 'price' | 'rating' | 'reviews';
         </div>
 
         <!-- Desktop: inline segmented search -->
-        <form class="websearch only-desktop" role="search" (ngSubmit)="searchNow()">
-          <label class="websearch__seg websearch__seg--grow">
-            <span class="websearch__label">Joylashuv</span>
-            <input name="q" placeholder="Shahar yoki mehmonxona" autocomplete="off"
-              [ngModel]="c().query" (ngModelChange)="hotels.patch({ query: $event })" />
-          </label>
-          <label class="websearch__seg">
-            <span class="websearch__label">Kelish</span>
-            <input type="date" name="in" [min]="today" [ngModel]="c().checkIn" (ngModelChange)="setCheckIn($event)" />
-          </label>
-          <label class="websearch__seg">
-            <span class="websearch__label">Ketish</span>
-            <input type="date" name="out" [min]="minOut()" [ngModel]="c().checkOut"
-              (ngModelChange)="$event && hotels.patch({ checkOut: $event })" />
-          </label>
-          <button type="button" class="websearch__seg websearch__seg--btn" (click)="searchOpen.set(true)">
-            <span class="websearch__label">Mehmonlar va filtrlar</span>
-            <span>{{ guests() }} mehmon</span>
-          </button>
-          <button type="submit" class="btn btn--primary websearch__go">
-            <app-icon name="search" [size]="18" /> Qidirish
-          </button>
-        </form>
+        <app-web-search class="only-desktop" />
       </div>
 
-      <div class="chips-row home__chips" role="radiogroup" aria-label="Saralash">
+      <div class="chips-row home__chips only-mobile" role="radiogroup" aria-label="Saralash">
         @for (s of sorts; track s.id) {
           <button type="button" role="radio" class="chip" [class.is-active]="sort() === s.id"
             [attr.aria-checked]="sort() === s.id" (click)="sort.set(s.id)">
             {{ s.label }} <app-icon name="chevron-down" [size]="16" />
           </button>
         }
+      </div>
+
+      <div class="toolbar home__chips only-desktop">
+        <div class="toolbar__group">
+          <span class="toolbar__label" id="sort-l">Saralash</span>
+          <div class="segmented" role="radiogroup" aria-labelledby="sort-l">
+            @for (s of sorts; track s.id) {
+              <button type="button" role="radio" class="segmented__item" [class.is-active]="sort() === s.id"
+                [attr.aria-checked]="sort() === s.id" (click)="sort.set(s.id)">{{ s.label }}</button>
+            }
+          </div>
+        </div>
+        <div class="toolbar__group">
+          <span class="toolbar__label" id="type-l">Joy turi</span>
+          <div class="chip-wrap" role="radiogroup" aria-labelledby="type-l">
+            @for (t of types; track t.id) {
+              <button type="button" role="radio" class="chip chip--sm" [class.is-active]="type() === t.id"
+                [attr.aria-checked]="type() === t.id" (click)="type.set(t.id)">{{ t.label }}</button>
+            }
+          </div>
+        </div>
       </div>
 
       <a class="loyalty-strip home__loyalty" routerLink="/bonuses" [attr.aria-label]="'Bonuslar: ' + loyalty.balance() + ' ball'">
@@ -123,11 +121,15 @@ type Sort = 'location' | 'price' | 'rating' | 'reviews';
 
       <section class="section home__popular" aria-labelledby="popular-h">
         <h2 class="section__title" id="popular-h">Mashhur mehmonxonalar</h2>
-        <ul class="h-scroll h-scroll--grid">
-          @for (h of popular(); track h.id) {
-            <li><app-hotel-card [hotel]="h" [guests]="guests()" /></li>
-          }
-        </ul>
+        @if (popular().length) {
+          <ul class="h-scroll h-scroll--grid">
+            @for (h of popular(); track h.id) {
+              <li><app-hotel-card [hotel]="h" [guests]="guests()" /></li>
+            }
+          </ul>
+        } @else {
+          <p class="muted">Bu turdagi joy hozircha yo‘q</p>
+        }
       </section>
     </main>
 
@@ -143,8 +145,6 @@ export class Home {
   private router = inject(Router);
 
   protected c = this.hotels.criteria;
-  protected readonly today = todayIso();
-  protected minOut = computed(() => addDays(this.c().checkIn, 1));
   protected searchOpen = signal(false);
   protected notifOpen = signal(false);
   protected sort = signal<Sort>('location');
@@ -155,11 +155,15 @@ export class Home {
     { id: 'reviews', label: 'Sharhlar' },
   ];
   protected readonly cities = CITIES;
+  protected readonly types = PROPERTY_TYPES;
+  /** Quick type filter for the popular list (desktop toolbar). */
+  protected type = signal<PropertyType | 'all'>('all');
   protected guests = computed(() => guestsOf(this.c()));
   protected badge = computed(() => this.bookings.upcoming().length);
 
   protected popular = computed(() => {
-    const list = [...this.hotels.hotels()];
+    const type = this.type();
+    const list = this.hotels.hotels().filter((h) => type === 'all' || h.type === type);
     const price = (h: Hotel) => cheapestRoom(h)?.pricePerNight ?? 0;
     const by: Record<Sort, (a: Hotel, b: Hotel) => number> = {
       location: (a, b) => a.distanceToCenterKm - b.distanceToCenterKm,
@@ -169,17 +173,6 @@ export class Home {
     };
     return list.sort(by[this.sort()]);
   });
-
-  setCheckIn(v: string) {
-    if (!v) return;
-    const out = this.c().checkOut > v ? this.c().checkOut : addDays(v, 1);
-    this.hotels.patch({ checkIn: v, checkOut: out });
-  }
-
-  searchNow() {
-    this.hotels.search(this.c());
-    this.router.navigateByUrl('/results');
-  }
 
   openCity(city: City) {
     this.hotels.search({ ...this.c(), query: city.name });
